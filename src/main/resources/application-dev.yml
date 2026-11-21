@@ -9,6 +9,9 @@ spring:
       static-locations: file:src/main/resources/static/
       cache:
         period: 0
+      # Re-hash on every request so Tailwind --watch output shows up on refresh.
+      chain:
+        cache: false
   devtools:
     restart:
       additional-exclude: static/**,templates/**

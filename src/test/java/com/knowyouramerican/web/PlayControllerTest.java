@@ -55,6 +55,25 @@ class PlayControllerTest {
                 .andExpect(content().string(containsString("data-date=\"2026-03-17\"")));
     }
 
+    /**
+     * nginx caches /css, /js, /img for 7 days, so pages must link content-hashed URLs; otherwise a
+     * deploy leaves returning visitors on the old stylesheet (the archive rendered unstyled).
+     */
+    @Test
+    void assetsAreLinkedWithContentHashesThatResolve() throws Exception {
+        for (String page : List.of("/", "/archive")) {
+            String html = mvc.perform(get(page)).andReturn().getResponse().getContentAsString();
+            var css = java.util.regex.Pattern.compile("href=\"(/css/app-[0-9a-f]{32}\\.css)\"").matcher(html);
+            assertThat(css.find()).as("hashed stylesheet on " + page).isTrue();
+            assertThat(html).containsPattern("src=\"/js/game-[0-9a-f]{32}\\.js\"");
+            assertThat(html).containsPattern("src=\"/js/htmx\\.min-[0-9a-f]{32}\\.js\"");
+            assertThat(html).containsPattern("/img/brand/mark-[0-9a-f]{32}\\.svg");
+            mvc.perform(get(css.group(1)))
+                    .andExpect(status().isOk())
+                    .andExpect(content().string(containsString("grid-cols-7")));
+        }
+    }
+
     @Test
     void fragmentShowsFirstCardWithoutLeakingTheAnswer() throws Exception {
         String html = mvc.perform(get("/play/" + DAY).header("HX-Request", "true").param("a", "-,-,-,-,-"))

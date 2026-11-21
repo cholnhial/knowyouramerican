@@ -9,20 +9,22 @@
   <title th:text="${title}">Know Your American</title>
   <meta name="description" content="Five American idioms a day. How well do you know your American?">
   <meta name="theme-color" content="#1E2A44">
-  <link rel="icon" href="/img/brand/favicon.svg" type="image/svg+xml">
-  <link rel="icon" href="/img/brand/favicon-32.png" sizes="32x32" type="image/png">
-  <link rel="apple-touch-icon" href="/img/brand/apple-touch-icon.png">
+  <link rel="icon" th:href="@{/img/brand/favicon.svg}" href="/img/brand/favicon.svg" type="image/svg+xml">
+  <link rel="icon" th:href="@{/img/brand/favicon-32.png}" href="/img/brand/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" th:href="@{/img/brand/apple-touch-icon.png}" href="/img/brand/apple-touch-icon.png">
   <link rel="preload" href="/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/fonts/fraunces-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="/css/app.css">
-  <script src="/js/htmx.min.js" defer></script>
-  <script src="/js/game.js" defer></script>
+  <!-- @{...} lets Spring rewrite these to content-hashed URLs (/css/app-<md5>.css), so a
+       deploy never leaves browsers on a stale cached stylesheet. -->
+  <link rel="stylesheet" th:href="@{/css/app.css}" href="/css/app.css">
+  <script th:src="@{/js/htmx.min.js}" src="/js/htmx.min.js" defer></script>
+  <script th:src="@{/js/game.js}" src="/js/game.js" defer></script>
 </th:block>
 
 <!-- Full-bleed background photo + caption -->
 <th:block th:fragment="background(bg)">
   <div class="fixed inset-0 -z-10 bg-ink">
-    <img th:if="${bg != null}" th:src="${bg.imageUrl()}" src="/img/bg/grand-canyon.webp" alt=""
+    <img th:if="${bg != null}" th:src="@{${bg.imageUrl()}}" src="/img/bg/grand-canyon.webp" alt=""
          class="h-full w-full object-cover" fetchpriority="high">
     <div class="absolute inset-0 bg-gradient-to-b from-ink/25 via-transparent to-ink/55"></div>
   </div>
@@ -49,7 +51,7 @@
 <!-- Top of the card: logo + nav -->
 <header th:fragment="header(active)" class="flex items-center justify-between gap-3">
   <a href="/" class="flex min-w-0 items-center gap-2.5" aria-label="Know Your American — today">
-    <img src="/img/brand/mark.svg" alt="" class="size-10 shrink-0" width="40" height="40">
+    <img th:src="@{/img/brand/mark.svg}" src="/img/brand/mark.svg" alt="" class="size-10 shrink-0" width="40" height="40">
     <span class="font-display text-xl leading-none font-semibold tracking-tight text-ink">
       Know Your <span class="text-liberty-deep">American</span>
     </span>

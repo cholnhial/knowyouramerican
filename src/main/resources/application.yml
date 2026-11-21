@@ -10,6 +10,15 @@ spring:
   threads:
     virtual:
       enabled: true
+  web:
+    resources:
+      # Content-hashed URLs for assets linked via @{...} in templates (app-<md5>.css). nginx caches
+      # /css, /js, /img for 7 days; without versioning a deploy would leave browsers on stale CSS.
+      chain:
+        strategy:
+          content:
+            enabled: true
+            paths: /css/**,/js/**,/img/**
 
 kya:
   db:

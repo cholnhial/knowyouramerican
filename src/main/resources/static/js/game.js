@@ -94,7 +94,9 @@
       const done = d.a.filter(Number.isInteger).length;
       const score = (d.r || []).filter((x) => x === 1).length;
       if (done === SIZE) {
-        cell.classList.add("bg-liberty", "text-white", "border-liberty");
+        // Finished: teal. Today's cell keeps its dark outline so "today" stays visible.
+        cell.classList.add("bg-liberty", "text-white");
+        if (!cell.classList.contains("border-ink/70")) cell.classList.add("border-liberty");
         cell.classList.remove("bg-white/70", "text-ink");
         if (badge) badge.textContent = `${score}/5`;
       } else if (done > 0) {

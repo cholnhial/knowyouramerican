@@ -51,7 +51,10 @@ jobs:
           curl -fsS -o /dev/null http://127.0.0.1:8099/
           curl -fsS -o /dev/null http://127.0.0.1:8099/play/2026-01-01
           curl -fsS -o /dev/null -H "HX-Request: true" http://127.0.0.1:8099/play/2026-01-01
-          curl -fsS -o /dev/null http://127.0.0.1:8099/css/app.css
+          curl -fsS -o /dev/null http://127.0.0.1:8099/archive
+          # Pages must link content-hashed CSS (stale-cache guard) and it must resolve.
+          CSS=$(curl -fsS http://127.0.0.1:8099/archive | grep -o '/css/app-[0-9a-f]\{32\}\.css' | head -1)
+          test -n "$CSS" && curl -fsS -o /dev/null "http://127.0.0.1:8099$CSS"
           if grep -E "MissingReflection|EL1008E|APPLICATION FAILED" /tmp/kya.log; then cat /tmp/kya.log; exit 1; fi
           echo "Native binary OK"
 
