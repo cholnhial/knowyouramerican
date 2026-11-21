@@ -241,3 +241,6 @@ target/
 /src/main/resources/static/css/app.css
 # Maven wrapper jar
 .mvn/wrapper/maven-wrapper.jar
+# Source dictionary (copyrighted McGraw-Hill ebook) — keep local only.
+# Needed only by tools/idiom-extractor (`make extract`, `make test-extractor`).
+/docs/idioms.pdf
