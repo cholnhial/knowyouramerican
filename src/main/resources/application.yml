@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: knowyouramerican
+  main:
+    banner-mode: off
+  flyway:
+    locations: classpath:db/migration
+  thymeleaf:
+    cache: true
+  threads:
+    virtual:
+      enabled: true
+
+kya:
+  db:
+    # SQLite file. Parent directories are created on startup.
+    path: ${KYA_DB_PATH:./data/kya.db}
+
+server:
+  port: ${PORT:8080}
+  compression:
+    enabled: true
+
+logging:
+  level:
+    com.knowyouramerican: INFO

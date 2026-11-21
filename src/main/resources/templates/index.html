@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <th:block th:replace="~{fragments/layout :: head('Know Your American — 5 idioms a day')}"></th:block>
+</head>
+<body class="min-h-dvh font-sans">
+  <th:block th:replace="~{fragments/layout :: background(${background})}"></th:block>
+
+  <main class="flex min-h-dvh items-center justify-center px-4 py-10 sm:px-8 sm:py-16">
+    <div class="w-full max-w-xl rounded-3xl bg-paper/90 p-5 shadow-2xl shadow-ink/30 ring-1 ring-white/50 backdrop-blur-md sm:p-8">
+      <th:block th:replace="~{fragments/layout :: header('today')}"></th:block>
+
+      <!--
+        #game is filled by HTMX with /play/{local date}. game.js reads the browser's local date.
+        When the server already rendered a day (direct /play/{date} visit), data-preloaded skips that.
+      -->
+      <section id="game" class="mt-6"
+               th:attr="data-preloaded=${preloaded}, data-fallback-date=${fallbackDate}">
+        <th:block th:if="${preloaded}">
+          <th:block th:replace="~{play :: game}"></th:block>
+        </th:block>
+        <th:block th:unless="${preloaded}">
+          <div class="flex h-40 items-center justify-center text-slate" aria-busy="true">
+            <span class="animate-pulse">Loading today's idioms…</span>
+          </div>
+          <noscript>
+            <p class="text-center">
+              <a th:href="@{/play/{d}(d=${fallbackDate})}" class="font-semibold text-liberty-deep underline">
+                Play today's idioms
+              </a>
+            </p>
+          </noscript>
+        </th:block>
+      </section>
+
+      <footer class="mt-8 border-t border-mist pt-4 text-center text-xs text-slate">
+        Idioms from <em>NTC's American Idioms Dictionary</em>.
+      </footer>
+    </div>
+  </main>
+</body>
+</html>

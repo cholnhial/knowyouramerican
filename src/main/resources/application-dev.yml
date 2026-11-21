@@ -1,0 +1,18 @@
+# Local development: serve templates and static files straight from src/ so edits
+# (and the Tailwind --watch output) show up on refresh without a restart.
+spring:
+  thymeleaf:
+    cache: false
+    prefix: file:src/main/resources/templates/
+  web:
+    resources:
+      static-locations: file:src/main/resources/static/
+      cache:
+        period: 0
+  devtools:
+    restart:
+      additional-exclude: static/**,templates/**
+
+logging:
+  level:
+    com.knowyouramerican: DEBUG

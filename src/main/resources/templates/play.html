@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- The day's game: date, progress circles, question cards. -->
+<div th:fragment="game" th:attr="data-day=${day}">
+  <div class="mb-5">
+    <p class="text-xs font-semibold tracking-widest text-liberty-deep uppercase">
+      Today's five · <span th:text="${day.year}">2026</span>
+    </p>
+    <h1 class="font-display text-[1.7rem] leading-tight font-semibold text-ink sm:text-4xl" th:text="${dayLabel}">
+      Saturday, November 21
+    </h1>
+  </div>
+
+  <th:block th:replace="~{fragments/layout :: progress(${results}, false)}"></th:block>
+
+  <!-- Round 1: one demo card to try the look and answer flow. -->
+  <article class="mt-6 rounded-2xl bg-white/80 p-5 shadow-sm ring-1 ring-mist sm:p-6" id="q-demo">
+    <p class="text-xs font-semibold tracking-widest text-slate uppercase">
+      1 of 5 · <span th:text="${demo.typeLabel}">What does it mean?</span>
+      <span class="ml-1 rounded-full bg-torch/25 px-2 py-0.5 text-[10px] text-ink normal-case tracking-normal">preview</span>
+    </p>
+    <h2 class="mt-2 font-display text-3xl font-semibold text-ink italic" th:text="'“' + ${demo.idiom} + '”'">“bite the bullet”</h2>
+    <p class="mt-1 text-sm text-slate" th:text="${demo.prompt}">Pick the meaning that fits.</p>
+
+    <form id="q-demo-options" class="mt-4 grid gap-2.5"
+          hx-post="/play/demo/answer" hx-target="this" hx-swap="outerHTML">
+      <button th:each="opt, it : ${demo.options}" type="submit" name="choice" th:value="${it.index}"
+              class="flex w-full gap-3 rounded-xl border-2 border-mist bg-white px-4 py-3 text-left text-[15px] font-medium text-ink
+                     transition hover:-translate-y-0.5 hover:border-liberty hover:shadow-md
+                     focus-visible:border-liberty focus-visible:outline-none active:translate-y-0">
+        <span class="font-bold text-liberty-deep" th:text="${'ABCD'.charAt(it.index)}">A</span>
+        <span th:text="${opt}">option</span>
+      </button>
+    </form>
+  </article>
+</div>
+
+<!-- Answer feedback: replaces the options form, plus OOB progress update. -->
+<th:block th:fragment="demo-feedback">
+  <div id="q-demo-options" class="mt-4 grid gap-2.5"
+       th:classappend="${correct} ? '' : 'animate-shake'">
+    <div th:each="opt, it : ${demo.options}"
+         th:classappend="${it.index == demo.correctIndex} ? 'border-liberty bg-liberty/10'
+                        : (${it.index == choice} ? 'border-firework bg-firework/10 line-through decoration-firework/60'
+                        : 'border-mist bg-white/50 text-slate')"
+         class="flex items-center justify-between gap-3 rounded-xl border-2 px-4 py-3 text-[15px] font-medium text-ink">
+      <span class="flex gap-3">
+        <span class="font-bold" th:text="${'ABCD'.charAt(it.index)}">A</span>
+        <span th:text="${opt}">option</span>
+      </span>
+      <span th:if="${it.index == demo.correctIndex}" class="font-bold text-liberty-deep animate-pop">✓</span>
+      <span th:if="${it.index == choice and !correct}" class="font-bold text-firework animate-pop">✗</span>
+    </div>
+
+    <div class="mt-2 rounded-xl p-4 text-sm"
+         th:classappend="${correct} ? 'bg-liberty/10 text-ink' : 'bg-firework/10 text-ink'">
+      <p class="font-display text-lg font-semibold"
+         th:text="${correct} ? 'Nailed it! 🎉' : 'Not quite — here’s the answer.'">Nailed it!</p>
+      <p class="mt-1 text-slate italic" th:text="'“' + ${demo.example} + '”'">example</p>
+    </div>
+  </div>
+
+  <th:block th:replace="~{fragments/layout :: progress(${results}, true)}"></th:block>
+</th:block>
+
+</body>
+</html>
