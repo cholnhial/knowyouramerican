@@ -108,7 +108,9 @@ jobs:
             chown -R kya:kya "$DEPLOY_PATH/data"
 
             # --- Swap in the new binary atomically ---
+            # (keep the previous binary as $APP_NAME.prev for a quick manual rollback)
             install -m 755 "$RELEASE/target/$APP_NAME" "$DEPLOY_PATH/$APP_NAME.new"
+            if [ -f "$DEPLOY_PATH/$APP_NAME" ]; then cp -p "$DEPLOY_PATH/$APP_NAME" "$DEPLOY_PATH/$APP_NAME.prev"; fi
             mv -f "$DEPLOY_PATH/$APP_NAME.new" "$DEPLOY_PATH/$APP_NAME"
 
             # --- Runtime config: localhost only, nginx is the public face ---
