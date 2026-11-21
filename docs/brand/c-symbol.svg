@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <!-- C · "Lady Liberty": the full figure in a badge — torch raised, open book in the crook of her arm -->
+  <circle cx="128" cy="128" r="122" fill="#111"/>
+  <g fill="#fff">
+    <!-- flame + cup -->
+    <path d="M168 20c-9 9-12 18-8 24 2 4 6 6 8 6s6-2 8-6c4-6 1-15-8-24z"/>
+    <path d="M157 54h22l-4 10h-14z"/>
+    <!-- raised arm from right shoulder (140,112) to the cup -->
+    <path d="M161 64h12l-24 58-14-8z"/>
+    <!-- crown rays + head -->
+    <path d="M118 48l4 18h-8zM98 56l14 14-6 5zM138 56l-8 19-6-5zM86 72l18 8-3 6zM150 72l-15 14-3-6z"/>
+    <circle cx="118" cy="88" r="16"/>
+    <!-- robe: shoulders flowing into a long drape -->
+    <path d="M90 122c6-12 18-16 30-16 14 0 26 6 32 16l10 128h-82z"/>
+  </g>
+  <!-- open book held at her left side -->
+  <path fill="#111" d="M72 142l30-6 4 40-30 6z"/>
+  <path fill="#fff" d="M77 147l11-2 3 30-11 2zM92 144l9-2 3 30-9 2z"/>
+</svg>

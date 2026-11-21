@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <!-- Know Your American favicon · "Crowned Book" (concept B), small-size cut of the Liberty mark -->
+  <rect width="256" height="256" rx="56" fill="#FBF7EF"/>
+  <g fill="#2F8F83" transform="translate(16 16) scale(0.875)">
+    <path d="M128 22l9 56h-18z"/>
+    <path d="M86 34l26 48-15 7z"/>
+    <path d="M170 34l-11 55-15-7z"/>
+    <path d="M52 60l40 34-11 12z"/>
+    <path d="M204 60l-29 46-11-12z"/>
+    <path d="M30 98l50 18-6 14z"/>
+    <path d="M226 98l-44 32-6-14z"/>
+    <path fill-rule="evenodd" d="M62 146c10-44 122-44 132 0zM96 124h14v14h-14zM121 118h14v16h-14zM146 124h14v14h-14z"/>
+    <path d="M24 162c38-8 78-4 100 14v62c-22-16-62-20-100-12z"/>
+    <path d="M232 162c-38-8-78-4-100 14v62c22-16 62-20 100-12z"/>
+  </g>
+</svg>

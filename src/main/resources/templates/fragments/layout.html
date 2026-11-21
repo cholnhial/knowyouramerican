@@ -9,6 +9,9 @@
   <title th:text="${title}">Know Your American</title>
   <meta name="description" content="Five American idioms a day. How well do you know your American?">
   <meta name="theme-color" content="#1E2A44">
+  <link rel="icon" href="/img/brand/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/img/brand/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="/img/brand/apple-touch-icon.png">
   <link rel="preload" href="/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/fonts/fraunces-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/css/app.css">
@@ -18,12 +21,12 @@
 
 <!-- Full-bleed background photo + caption -->
 <th:block th:fragment="background(bg)">
-  <div class="fixed inset-0 -z-10">
-    <img th:src="${bg.imageUrl()}" src="/img/bg/grand-canyon.webp" alt=""
+  <div class="fixed inset-0 -z-10 bg-ink">
+    <img th:if="${bg != null}" th:src="${bg.imageUrl()}" src="/img/bg/grand-canyon.webp" alt=""
          class="h-full w-full object-cover" fetchpriority="high">
-    <div class="absolute inset-0 bg-gradient-to-b from-ink/25 via-transparent to-ink/50"></div>
+    <div class="absolute inset-0 bg-gradient-to-b from-ink/25 via-transparent to-ink/55"></div>
   </div>
-  <p class="fixed bottom-2 right-3 z-0 text-[11px] text-white/85 drop-shadow">
+  <p th:if="${bg != null}" class="fixed right-3 bottom-2 z-0 max-w-[70vw] truncate text-[11px] text-white/85 drop-shadow">
     <span aria-hidden="true">📍</span>
     <span th:text="${bg.title + ', ' + bg.location}">Grand Canyon, Arizona</span>
     · <a th:href="${bg.sourceUrl}" class="underline decoration-white/40 hover:decoration-white"
@@ -31,17 +34,27 @@
   </p>
 </th:block>
 
-<!-- Top of the card: wordmark + nav -->
-<header th:fragment="header(active)" class="flex items-center justify-between gap-4">
-  <a href="/" class="group flex items-center gap-2.5">
-    <!-- Temporary mark until the Liberty logo is designed (round 6) -->
-    <span class="grid size-9 shrink-0 place-items-center rounded-full bg-liberty text-lg text-white shadow-sm"
-          aria-hidden="true">✦</span>
+<!-- The centered frosted card that holds every page -->
+<div th:fragment="frame(content, active)"
+     class="w-full max-w-xl rounded-3xl bg-paper/90 p-5 shadow-2xl ring-1 shadow-ink/30 ring-white/50 backdrop-blur-md sm:p-8">
+  <th:block th:replace="~{fragments/layout :: header(${active})}"></th:block>
+  <div class="mt-6">
+    <th:block th:replace="${content}"></th:block>
+  </div>
+  <footer class="mt-8 border-t border-mist pt-4 text-center text-xs text-slate">
+    Idioms from <em>NTC’s American Idioms Dictionary</em> · A new five every day.
+  </footer>
+</div>
+
+<!-- Top of the card: logo + nav -->
+<header th:fragment="header(active)" class="flex items-center justify-between gap-3">
+  <a href="/" class="flex min-w-0 items-center gap-2.5" aria-label="Know Your American — today">
+    <img src="/img/brand/mark.svg" alt="" class="size-10 shrink-0" width="40" height="40">
     <span class="font-display text-xl leading-none font-semibold tracking-tight text-ink">
       Know Your <span class="text-liberty-deep">American</span>
     </span>
   </a>
-  <nav class="flex gap-1 text-sm font-medium">
+  <nav class="flex shrink-0 gap-1 text-sm font-medium">
     <a href="/" th:classappend="${active == 'today'} ? 'bg-ink text-paper' : 'text-slate hover:bg-mist'"
        class="rounded-full px-3 py-1.5 transition">Today</a>
     <a href="/archive" th:classappend="${active == 'archive'} ? 'bg-ink text-paper' : 'text-slate hover:bg-mist'"
@@ -49,24 +62,28 @@
   </nav>
 </header>
 
-<!-- Five progress circles + "n/5 done". Re-rendered out-of-band after each answer. -->
-<div th:fragment="progress(results, oob)" id="progress"
-     th:attr="hx-swap-oob=${oob} ? 'true' : null"
-     class="flex items-center justify-between gap-3">
+<!-- Five progress circles + "n/5 done". Each circle jumps to its card. -->
+<div th:fragment="progress(g)" class="flex items-center justify-between gap-3">
   <ol class="flex gap-2" aria-label="Progress">
-    <li th:each="r, it : ${results}"
-        th:attr="aria-label=${'Idiom ' + it.count + ': ' + r}"
-        th:classappend="${r == 'correct'} ? 'bg-liberty border-liberty text-white animate-pop'
-                       : (${r == 'missed'} ? 'bg-firework border-firework text-white animate-pop'
-                       : 'bg-white/60 border-mist text-slate/60')"
-        class="grid size-8 place-items-center rounded-full border-2 text-sm font-bold">
-      <span th:if="${r == 'correct'}">✓</span>
-      <span th:if="${r == 'missed'}">✗</span>
-      <span th:if="${r == 'pending'}" th:text="${it.count}">1</span>
+    <li th:each="r, it : ${g.results()}">
+      <button type="button"
+              th:attr="hx-get=@{/play/{d}(d=${g.day()},q=${it.count})},
+                       aria-label=${'Idiom ' + it.count + ': ' + r},
+                       aria-current=${g.card() != null and g.card().position() == it.count} ? 'step' : null"
+              th:classappend="${r == 'correct'} ? 'bg-liberty border-liberty text-white'
+                             : (${r == 'missed'} ? 'bg-firework border-firework text-white'
+                             : 'bg-white/70 border-mist text-slate')"
+              th:class="${g.card() != null and g.card().position() == it.count}
+                        ? 'grid size-9 place-items-center rounded-full border-2 text-sm font-bold transition ring-2 ring-offset-2 ring-ink/70 ring-offset-paper'
+                        : 'grid size-9 place-items-center rounded-full border-2 text-sm font-bold transition hover:scale-105'">
+        <span th:if="${r == 'correct'}" th:classappend="${g.card() != null and g.card().justAnswered() and g.card().position() == it.count} ? 'animate-pop'" class="inline-block">✓</span>
+        <span th:if="${r == 'missed'}" th:classappend="${g.card() != null and g.card().justAnswered() and g.card().position() == it.count} ? 'animate-pop'" class="inline-block">✗</span>
+        <span th:if="${r == 'pending'}" th:text="${it.count}">1</span>
+      </button>
     </li>
   </ol>
-  <p class="text-sm font-semibold text-slate">
-    <span th:text="${#lists.size(results.?[#this != 'pending'])}">0</span>/5 done
+  <p class="text-sm font-semibold whitespace-nowrap text-slate">
+    <span th:text="${g.done()}">0</span>/5 done
   </p>
 </div>
 

@@ -3,8 +3,144 @@
     "slug": "grand-canyon",
     "title": "Grand Canyon",
     "location": "South Rim, Arizona",
-    "credit": "Wikimedia Commons",
+    "credit": "Mgimelfarb",
     "license": "CC0",
     "sourceUrl": "https://commons.wikimedia.org/wiki/File:Grand_Canyon_South_Rim_at_Sunset.jpg"
+  },
+  {
+    "slug": "statue-of-liberty",
+    "title": "Statue of Liberty",
+    "location": "Liberty Island, New York",
+    "credit": "Christian David",
+    "license": "CC BY-SA 4.0",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Statue_of_Liberty_and_a_sightseeing_boat,_Liberty_Island,_New_York.jpg"
+  },
+  {
+    "slug": "golden-gate-bridge",
+    "title": "Golden Gate Bridge",
+    "location": "San Francisco, California",
+    "credit": "Frank Schulenburg",
+    "license": "CC BY-SA 4.0",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Golden_Gate_Bridge_as_seen_from_Marshall%E2%80%99s_Beach,_March_2018.jpg"
+  },
+  {
+    "slug": "mount-rushmore",
+    "title": "Mount Rushmore",
+    "location": "Keystone, South Dakota",
+    "credit": "Thomas Wolf, www.foto-tw.de",
+    "license": "CC BY-SA 3.0",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Mount_Rushmore_detail_view.jpg"
+  },
+  {
+    "slug": "yosemite",
+    "title": "Yosemite Valley",
+    "location": "Tunnel View, California",
+    "credit": "Diliff",
+    "license": "CC BY-SA 3.0",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Tunnel_View,_Yosemite_Valley,_Yosemite_NP_-_Diliff.jpg"
+  },
+  {
+    "slug": "grand-prismatic",
+    "title": "Grand Prismatic Spring",
+    "location": "Yellowstone, Wyoming",
+    "credit": "Dietmar Rabich",
+    "license": "CC BY-SA 4.0",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Yellowstone_National_Park_(WY,_USA),_Grand_Prismatic_Spring_--_2022_--_2519.jpg"
+  },
+  {
+    "slug": "lincoln-memorial",
+    "title": "Lincoln Memorial",
+    "location": "Washington, D.C.",
+    "credit": "Martin Falbisoner",
+    "license": "CC BY-SA 3.0",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Lincoln_Memorial_east_side.JPG"
+  },
+  {
+    "slug": "independence-hall",
+    "title": "Independence Hall",
+    "location": "Philadelphia, Pennsylvania",
+    "credit": "xiquinhosilva",
+    "license": "CC BY 2.0",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Independence_Hall,_2016_2.jpg"
+  },
+  {
+    "slug": "monument-valley",
+    "title": "Monument Valley",
+    "location": "Utah–Arizona border",
+    "credit": "King of Hearts",
+    "license": "CC BY-SA 4.0",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Forrest_Gump_Point_Monument_Valley_November_2018_001.jpg"
+  },
+  {
+    "slug": "niagara-falls",
+    "title": "Niagara Falls",
+    "location": "New York",
+    "credit": "DXR",
+    "license": "CC BY-SA 4.0",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Maid_of_the_Mist_VII_approaching_the_Horseshoe_Falls,_West_view_20170418_1.jpg"
+  },
+  {
+    "slug": "delicate-arch",
+    "title": "Delicate Arch",
+    "location": "Arches National Park, Utah",
+    "credit": "Massimo Catarinella",
+    "license": "CC BY-SA 3.0",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:ArchesNationalParkDelicateArch.jpg"
+  },
+  {
+    "slug": "gateway-arch",
+    "title": "Gateway Arch",
+    "location": "St. Louis, Missouri",
+    "credit": "Daniel Schwen",
+    "license": "CC BY-SA 4.0",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:St_Louis_night_expblend.jpg"
+  },
+  {
+    "slug": "brooklyn-bridge",
+    "title": "Brooklyn Bridge",
+    "location": "New York City",
+    "credit": "Arild Vågen",
+    "license": "CC BY-SA 4.0",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Brooklyn_Bridge_August_2017.jpg"
+  },
+  {
+    "slug": "mesa-verde",
+    "title": "Cliff Palace",
+    "location": "Mesa Verde, Colorado",
+    "credit": "Andreas F. Borchert",
+    "license": "CC BY-SA 4.0",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Mesa_Verde_National_Park_Cliff_Palace_2006_09_12.jpg"
+  },
+  {
+    "slug": "hoover-dam",
+    "title": "Hoover Dam",
+    "location": "Black Canyon, Nevada",
+    "credit": "Christian David",
+    "license": "CC BY-SA 4.0",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Approach_road,_switchyards_and_canyon_near_Hoover_Dam,_panorama,_Nevada,_United_States.jpg"
+  },
+  {
+    "slug": "the-alamo",
+    "title": "The Alamo",
+    "location": "San Antonio, Texas",
+    "credit": "Daniel Schwen",
+    "license": "CC BY-SA 4.0",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Alamo_pano.jpg"
+  },
+  {
+    "slug": "great-smoky-mountains",
+    "title": "Great Smoky Mountains",
+    "location": "Tennessee–North Carolina",
+    "credit": "Rhododendrites",
+    "license": "CC BY-SA 4.0",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Meadow_in_the_Smoky_Mountains_(41923p).jpg"
+  },
+  {
+    "slug": "horseshoe-bend",
+    "title": "Horseshoe Bend",
+    "location": "Page, Arizona",
+    "credit": "Dllu",
+    "license": "CC BY-SA 4.0",
+    "sourceUrl": "https://commons.wikimedia.org/wiki/File:Horseshoe_Bend_Arizona_dllu.jpg"
   }
 ]

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <!-- A · "Liberty Reads": crowned bust, raised arm with torch, open book held at the chest -->
+  <g fill="#111">
+    <!-- flame + cup -->
+    <path d="M196 14c-13 13-17 25-11 34 3 5 9 8 11 8s8-3 11-8c6-9 2-21-11-34z"/>
+    <path d="M181 60h30l-6 14h-18z"/>
+    <!-- raised arm: shoulder (150,176) → hand under cup (196,76) -->
+    <path d="M187 74h18l-34 118-24-14z"/>
+    <!-- crown: band + seven rays -->
+    <path d="M78 108c8-20 60-20 68 0z"/>
+    <path d="M112 40l6 50h-12z"/>
+    <path d="M84 50l20 44-11 5z"/>
+    <path d="M140 50l-9 49-11-5z"/>
+    <path d="M62 70l31 33-9 8z"/>
+    <path d="M162 70l-22 41-9-8z"/>
+    <path d="M50 98l38 16-5 11z"/>
+    <path d="M174 98l-33 27-5-11z"/>
+    <!-- head -->
+    <circle cx="112" cy="132" r="24"/>
+    <!-- shoulders / robe -->
+    <path d="M36 244c0-48 32-80 76-80 28 0 52 12 64 34l8 46z"/>
+  </g>
+  <!-- open book in front of the robe -->
+  <path fill="#fff" d="M56 186c18-4 36-2 52 8v50c-16-8-34-10-52-6zM168 186c-18-4-36-2-52 8v50c16-8 34-10 52-6z"/>
+</svg>

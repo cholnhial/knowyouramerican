@@ -2,68 +2,170 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <body>
 
-<!-- The day's game: date, progress circles, question cards. -->
-<div th:fragment="game" th:attr="data-day=${day}">
-  <div class="mb-5">
-    <p class="text-xs font-semibold tracking-widest text-liberty-deep uppercase">
-      Today's five · <span th:text="${day.year}">2026</span>
-    </p>
-    <h1 class="font-display text-[1.7rem] leading-tight font-semibold text-ink sm:text-4xl" th:text="${dayLabel}">
-      Saturday, November 21
-    </h1>
+<!-- ===================================================================== the day's game -->
+<div th:fragment="game" th:attr="data-day=${g.day()}">
+  <!-- Day header with archive arrows -->
+  <div class="mb-5 flex items-end justify-between gap-3">
+    <div>
+      <p class="text-xs font-semibold tracking-widest text-liberty-deep uppercase">
+        <span th:text="${g.eyebrow()}">Today's five</span> · <span th:text="${g.day().getYear()}">2026</span>
+      </p>
+      <h1 class="font-display text-[1.55rem] leading-tight font-semibold text-ink sm:text-4xl"
+          th:text="${g.dayLabel()}">Saturday, November 21</h1>
+    </div>
+    <div class="flex shrink-0 gap-0.5 pb-1">
+      <a th:if="${g.previousDay() != null}" th:href="@{/play/{d}(d=${g.previousDay()})}"
+         class="grid size-9 place-items-center rounded-full text-lg text-slate transition hover:bg-mist hover:text-ink"
+         aria-label="Previous day" title="Previous day">‹</a>
+      <a th:if="${g.nextDay() != null}" th:href="@{/play/{d}(d=${g.nextDay()})}"
+         class="grid size-9 place-items-center rounded-full text-lg text-slate transition hover:bg-mist hover:text-ink"
+         aria-label="Next day" title="Next day">›</a>
+    </div>
   </div>
 
-  <th:block th:replace="~{fragments/layout :: progress(${results}, false)}"></th:block>
+  <th:block th:replace="~{fragments/layout :: progress(${g})}"></th:block>
 
-  <!-- Round 1: one demo card to try the look and answer flow. -->
-  <article class="mt-6 rounded-2xl bg-white/80 p-5 shadow-sm ring-1 ring-mist sm:p-6" id="q-demo">
-    <p class="text-xs font-semibold tracking-widest text-slate uppercase">
-      1 of 5 · <span th:text="${demo.typeLabel}">What does it mean?</span>
-      <span class="ml-1 rounded-full bg-torch/25 px-2 py-0.5 text-[10px] text-ink normal-case tracking-normal">preview</span>
-    </p>
-    <h2 class="mt-2 font-display text-3xl font-semibold text-ink italic" th:text="'“' + ${demo.idiom} + '”'">“bite the bullet”</h2>
-    <p class="mt-1 text-sm text-slate" th:text="${demo.prompt}">Pick the meaning that fits.</p>
-
-    <form id="q-demo-options" class="mt-4 grid gap-2.5"
-          hx-post="/play/demo/answer" hx-target="this" hx-swap="outerHTML">
-      <button th:each="opt, it : ${demo.options}" type="submit" name="choice" th:value="${it.index}"
-              class="flex w-full gap-3 rounded-xl border-2 border-mist bg-white px-4 py-3 text-left text-[15px] font-medium text-ink
-                     transition hover:-translate-y-0.5 hover:border-liberty hover:shadow-md
-                     focus-visible:border-liberty focus-visible:outline-none active:translate-y-0">
-        <span class="font-bold text-liberty-deep" th:text="${'ABCD'.charAt(it.index)}">A</span>
-        <span th:text="${opt}">option</span>
-      </button>
-    </form>
-  </article>
+  <div class="mt-6">
+    <th:block th:if="${g.card() != null}">
+      <th:block th:replace="~{play :: card(${g}, ${g.card()})}"></th:block>
+    </th:block>
+    <th:block th:if="${g.card() == null}">
+      <th:block th:replace="~{play :: summary(${g})}"></th:block>
+    </th:block>
+  </div>
 </div>
 
-<!-- Answer feedback: replaces the options form, plus OOB progress update. -->
-<th:block th:fragment="demo-feedback">
-  <div id="q-demo-options" class="mt-4 grid gap-2.5"
-       th:classappend="${correct} ? '' : 'animate-shake'">
-    <div th:each="opt, it : ${demo.options}"
-         th:classappend="${it.index == demo.correctIndex} ? 'border-liberty bg-liberty/10'
-                        : (${it.index == choice} ? 'border-firework bg-firework/10 line-through decoration-firework/60'
-                        : 'border-mist bg-white/50 text-slate')"
-         class="flex items-center justify-between gap-3 rounded-xl border-2 px-4 py-3 text-[15px] font-medium text-ink">
+<!-- ===================================================================== one question card -->
+<article th:fragment="card(g, c)" id="card"
+         class="rounded-2xl bg-white/85 p-5 shadow-sm ring-1 ring-mist sm:p-6"
+         th:classappend="${c.justAnswered() and !c.correct()} ? 'animate-shake'">
+
+  <p class="text-xs font-semibold tracking-widest text-slate uppercase">
+    <span th:text="${c.position()}">1</span> of 5 · <span th:text="${c.typeLabel()}">What does it mean?</span>
+  </p>
+
+  <!-- Prompt -->
+  <th:block th:switch="${c.typeName()}">
+    <h2 th:case="'MEANING'" class="mt-2 font-display text-3xl leading-tight font-semibold text-ink italic"
+        th:text="'“' + ${c.promptParts()[0]} + '”'">“bite the bullet”</h2>
+
+    <h2 th:case="'FINISH'" class="mt-2 font-display text-[1.65rem] leading-snug font-semibold text-ink italic">“<th:block
+        th:each="part, it : ${c.promptParts()}"><span th:text="${part}">part</span><th:block th:unless="${it.last}"><span
+        th:if="${!c.answered()}" class="mx-1 inline-block w-20 translate-y-1 border-b-[3px] border-liberty-deep/70" aria-label="blank">&nbsp;</span><span
+        th:if="${c.answered()}" class="rounded-md bg-liberty/15 px-1.5 text-liberty-deep not-italic"
+        th:text="${c.blankFill()}">word</span></th:block></th:block>”</h2>
+
+    <p th:case="'FITS'" class="mt-3 text-lg leading-relaxed text-ink"><th:block
+        th:each="part, it : ${c.promptParts()}"><span th:text="${part}">part</span><th:block th:unless="${it.last}"><span
+        th:if="${!c.answered()}" class="mx-1 inline-block w-24 translate-y-1 border-b-[3px] border-liberty-deep/70" aria-label="blank">&nbsp;</span><span
+        th:if="${c.answered()}" class="rounded-md bg-liberty/15 px-1.5 font-semibold text-liberty-deep"
+        th:text="${c.blankFill()}">idiom</span></th:block></th:block></p>
+  </th:block>
+
+  <p class="mt-2 text-sm text-slate" th:text="${c.instruction()}">Pick the meaning.</p>
+  <p th:if="${c.hint() != null}" class="mt-1 text-sm text-slate">
+    <span class="font-semibold text-ink">Means:</span> <span th:text="${c.hint()}">hint</span>
+  </p>
+
+  <!-- Options: buttons until answered, then a locked result list -->
+  <form th:if="${!c.answered()}" class="mt-4 grid gap-2.5"
+        th:attr="hx-post=@{/play/{d}/q/{p}(d=${g.day()},p=${c.position()})}"
+        hx-disabled-elt="find button">
+    <button th:each="opt, it : ${c.options()}" type="submit" name="choice" th:value="${it.index}"
+            class="flex w-full gap-3 rounded-xl border-2 border-mist bg-white px-4 py-3 text-left text-[15px] font-medium text-ink transition hover:-translate-y-0.5 hover:border-liberty hover:shadow-md focus-visible:border-liberty focus-visible:outline-none active:translate-y-0 disabled:opacity-60">
+      <span class="font-bold text-liberty-deep" th:text="${c.letter(it.index)}">A</span>
+      <span th:text="${opt}">option</span>
+    </button>
+  </form>
+
+  <ul th:if="${c.answered()}" class="mt-4 grid gap-2.5">
+    <li th:each="opt, it : ${c.options()}"
+        th:with="state=${c.optionState(it.index)}"
+        th:classappend="${state == 'right'} ? 'border-liberty bg-liberty/10 text-ink'
+                       : (${state == 'wrong'} ? 'border-firework bg-firework/10 text-ink line-through decoration-firework/60'
+                       : 'border-mist bg-white/50 text-slate')"
+        class="flex items-center justify-between gap-3 rounded-xl border-2 px-4 py-3 text-[15px] font-medium">
       <span class="flex gap-3">
-        <span class="font-bold" th:text="${'ABCD'.charAt(it.index)}">A</span>
+        <span class="font-bold" th:text="${c.letter(it.index)}">A</span>
         <span th:text="${opt}">option</span>
       </span>
-      <span th:if="${it.index == demo.correctIndex}" class="font-bold text-liberty-deep animate-pop">✓</span>
-      <span th:if="${it.index == choice and !correct}" class="font-bold text-firework animate-pop">✗</span>
-    </div>
+      <span th:if="${state == 'right'}" class="font-bold text-liberty-deep"
+            th:classappend="${c.justAnswered()} ? 'animate-pop'" aria-label="correct answer">✓</span>
+      <span th:if="${state == 'wrong'}" class="font-bold text-firework"
+            th:classappend="${c.justAnswered()} ? 'animate-pop'" aria-label="your answer">✗</span>
+    </li>
+  </ul>
 
-    <div class="mt-2 rounded-xl p-4 text-sm"
-         th:classappend="${correct} ? 'bg-liberty/10 text-ink' : 'bg-firework/10 text-ink'">
-      <p class="font-display text-lg font-semibold"
-         th:text="${correct} ? 'Nailed it! 🎉' : 'Not quite — here’s the answer.'">Nailed it!</p>
-      <p class="mt-1 text-slate italic" th:text="'“' + ${demo.example} + '”'">example</p>
-    </div>
+  <!-- Reveal -->
+  <div th:if="${c.answered()}" class="mt-4 rounded-xl p-4"
+       th:classappend="${c.correct()} ? 'bg-liberty/10' : 'bg-firework/10'">
+    <p class="font-display text-lg font-semibold text-ink"
+       th:text="${c.correct()} ? 'Nailed it! 🎉' : 'Not quite — here’s the scoop.'">Nailed it!</p>
+    <p class="mt-1 text-[15px] text-ink">
+      <span class="font-display font-semibold italic" th:text="'“' + ${c.reveal().headword()} + '”'">“idiom”</span>
+      <span th:text="'— ' + ${c.reveal().meaning()} + '.'">— meaning.</span>
+    </p>
+    <p th:if="${c.reveal().example() != null}" class="mt-2 text-sm text-slate italic"
+       th:text="'e.g. ' + ${c.reveal().example()}">e.g. example</p>
+    <p th:if="${c.reveal().notes() != null}" class="mt-2 text-xs text-slate"
+       th:text="${c.reveal().notes()}">notes</p>
   </div>
 
-  <th:block th:replace="~{fragments/layout :: progress(${results}, true)}"></th:block>
-</th:block>
+  <!-- Onward -->
+  <div th:if="${c.answered()}" class="mt-4 flex justify-end">
+    <button type="button" th:if="${g.nextPosition() != 0}"
+            th:attr="hx-get=@{/play/{d}(d=${g.day()},q=${g.nextPosition()})}"
+            class="rounded-full bg-liberty-deep px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-ink">
+      Next idiom →
+    </button>
+    <button type="button" th:if="${g.nextPosition() == 0}"
+            th:attr="hx-get=@{/play/{d}(d=${g.day()})}"
+            class="rounded-full bg-liberty-deep px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-ink">
+      See your results →
+    </button>
+  </div>
+</article>
+
+<!-- ===================================================================== end-of-day summary -->
+<section th:fragment="summary(g)" class="rounded-2xl bg-white/85 p-5 text-center shadow-sm ring-1 ring-mist sm:p-6">
+  <p class="text-xs font-semibold tracking-widest text-slate uppercase">Your result</p>
+  <p class="mt-1 font-display text-6xl font-semibold text-ink animate-pop">
+    <span th:text="${g.score()}">4</span><span class="text-3xl text-slate">/5</span>
+  </p>
+  <p class="mt-1 font-display text-xl text-liberty-deep italic" th:text="${g.verdict()}">Sharp as a tack!</p>
+
+  <p class="mt-3 text-2xl tracking-[0.25em]" aria-hidden="true">
+    <span th:each="r : ${g.results()}" th:text="${r == 'correct'} ? '🟩' : '🟥'">🟩</span>
+  </p>
+
+  <button type="button" th:attr="data-share=${g.shareText()}"
+          class="mt-4 inline-flex items-center gap-2 rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-paper shadow-sm transition hover:bg-liberty-deep">
+    <span data-share-label>Share your result</span>
+  </button>
+
+  <ol class="mt-6 grid gap-2 text-left">
+    <li th:each="c : ${g.review()}">
+      <button type="button" th:attr="hx-get=@{/play/{d}(d=${g.day()},q=${c.position()})}"
+              class="flex w-full items-start gap-3 rounded-xl border border-mist bg-white/70 px-4 py-3 text-left transition hover:border-liberty">
+        <span class="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full text-xs font-bold text-white"
+              th:classappend="${c.correct()} ? 'bg-liberty' : 'bg-firework'"
+              th:text="${c.correct()} ? '✓' : '✗'">✓</span>
+        <span class="min-w-0">
+          <span class="block font-display font-semibold text-ink italic" th:text="${c.reveal().headword()}">idiom</span>
+          <span class="block text-sm text-slate" th:text="${c.reveal().meaning()}">meaning</span>
+        </span>
+      </button>
+    </li>
+  </ol>
+
+  <div class="mt-6 flex flex-wrap justify-center gap-2 text-sm font-semibold">
+    <a th:if="${g.previousDay() != null}" th:href="@{/play/{d}(d=${g.previousDay()})}"
+       class="rounded-full border-2 border-mist bg-white px-4 py-2 text-ink transition hover:border-liberty">← Play the day before</a>
+    <a href="/archive" class="rounded-full border-2 border-mist bg-white px-4 py-2 text-ink transition hover:border-liberty">Browse the archive</a>
+    <a href="/archive/random" class="rounded-full border-2 border-mist bg-white px-4 py-2 text-ink transition hover:border-liberty">🎲 Random day</a>
+  </div>
+  <p th:if="${g.today()}" class="mt-4 text-xs text-slate">Come back tomorrow for five new idioms.</p>
+</section>
 
 </body>
 </html>

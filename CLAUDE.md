@@ -126,19 +126,41 @@ Package root `com.knowyouramerican`:
 - **FITS:** finds the idiom in an example sentence with `idiomPattern`. That match handles inflections (bit/bite, patted), irregular first verbs, placeholder slots, and optional "(…)" words. Trailing slots stay outside the blank. The sentence needs at least 5 words, and the idiom's rarest word must not survive in it.
 - After changing the generator, run `make db-reset` locally: existing days are stored and never regenerated.
 
-**Request flow**
-- `GET /` is the shell. An inline script reads the browser's local date and runs `hx-get /play/{date}`. Without JS it falls back to the server date.
-- `GET /play/{date}[?a=2,0,-,1,3]` renders the game fragment. The `a` parameter carries saved answers from localStorage, so answered cards render already resolved.
-- `POST /play/{date}/q/{pos}` with `choice`: the server checks it and returns a feedback fragment plus an out-of-band swap for the progress circles. `game.js` then saves the answer.
-- `GET /archive?year=&month=` shows the calendar, and `GET /archive/random` redirects to a random existing date.
-- **The correct index never appears in HTML** until that question has been answered.
-- Requests for dates later than **UTC now + 14h** are rejected, so nobody can peek ahead.
+**Request flow** (`web/PlayController`, `web/ArchiveController`)
+- `GET /` and `GET /play/{date}` (normal navigation) render the **shell** (`index.html`). Its `#game` element loads itself with `hx-trigger="load"` from `/play/today` or `/play/{date}`.
+- `#game` carries `hx-vals='js:{a: KYA.answersFor(KYA.gameDate()), today: KYA.localDate()}'`. Every HTMX request inside it inherits these values, so the circles, answer buttons, and "Next" all send the browser's **local date** and **saved answers**. Answers use the wire format `a=2,0,-,-,-`, parsed leniently by `web/Answers`.
+- `GET /play/{date|today}` with `HX-Request` returns the `play :: game` fragment. `q=1..5` picks a card; the default is the first unanswered card, or the summary when all are done. `today` resolves to the player's date when it is playable, otherwise UTC today.
+- `POST /play/{date}/q/{pos}` (`choice`, plus the inherited `a`) re-renders the game with that card answered.
+  - It also sends `HX-Trigger: {"kya:answered":{date,pos,choice,correct}}`, and `game.js` stores that in localStorage.
+  - **One shot:** if `a` already has an answer for that card, the new choice is ignored and no event is sent.
+- **The correct index never reaches the page** for an unanswered card: `CardView.correctIndex = -1` and `reveal = null`.
+- `GameViews` generates a missing day on demand. Dates outside 2026-01-01 … UTC now + 14h return 404, rendered by `error.html`.
+- `GET /archive?year=&month=`: month calendar (`fragments/calendar.html`, Sunday first). The selects and arrows swap `#calendar` over HTMX (the controller checks `HX-Target: calendar`) and push the URL. Days run up to UTC today.
+- `GET /archive/random` redirects to a random day between 2026-01-01 and UTC today.
+
+**Browser state** (`static/js/game.js`, the only script; HTMX does the rest):
+- Storage is `localStorage["kya:v1"] = {"2026-11-21": {a:[2,0,null,null,null], r:[1,0,null,null,null]}}`, where `a` is the chosen option and `r` is 1 for correct, 0 for missed.
+- It colours archive cells (`[data-kya-day]`): teal with the score when finished, a gold ring with "n/5" when started.
+- The summary's share button uses `navigator.share` on touch devices, otherwise the clipboard.
+
+**Templates:**
+- `index.html` (shell), `play.html` (fragments `game`, `card`, `summary`), `archive.html`, `fragments/layout.html` (`head`, `background`, `frame`, `header`, `progress`), `fragments/calendar.html`, `error.html`.
+- Call record accessors with `()` (`g.day()`). Every type a template touches must be in `config/TemplateHints` (see Conventions).
 
 ## Backgrounds
 
-There are 15+ high-res photos in `src/main/resources/static/img/bg/`, converted to WebP (about 2560px wide, roughly 400 KB). They're public domain or CC from Wikimedia Commons, preferring NPS and Library of Congress images, which are US-government public domain. Every image needs an entry in `backgrounds.json` with `slug`, `title`, `location`, `credit`, `license`, and `sourceUrl`. The page shows a small caption with the place and credit.
+There are 18 photos in `src/main/resources/static/img/bg/`, each 2560×1600 WebP at about 430 KB. They're CC0, CC BY, or CC BY-SA from Wikimedia Commons; every one has its credit and licence in `backgrounds.json`, and the page caption links to the source (CC BY / BY-SA require that).
+- **Places:** Grand Canyon, Statue of Liberty, Golden Gate, Mount Rushmore, Yosemite, Grand Prismatic, Lincoln Memorial, Independence Hall, Monument Valley, Niagara Falls, Delicate Arch, Gateway Arch, Brooklyn Bridge, Mesa Verde, Hoover Dam, the Alamo, Great Smoky Mountains, Horseshoe Bend.
+- **Regenerating:** `scripts/fetch-backgrounds.py` holds the list (slug, title, location, exact Commons file). It downloads each photo at 3840px, cover-crops it, encodes it with `cwebp -size 450000`, and rewrites `backgrounds.json`. Run it with `make backgrounds`; to add a place, add a line to the list and rerun.
+- **Display:** one photo is picked at random per page load.
 
-Planned set: Grand Canyon, Statue of Liberty, Golden Gate Bridge, Mount Rushmore, Yosemite, Yellowstone (Grand Prismatic), Lincoln Memorial, Independence Hall, Monument Valley, Niagara Falls, Arches, Gateway Arch, Brooklyn Bridge, Mesa Verde, Mount Rainier, Hoover Dam, the Alamo, Great Smoky Mountains.
+## Logo
+
+Concepts are in `docs/brand/` (`logo-concepts.png` plus the greyscale SVGs `a/b/c-symbol.svg`).
+- **In use (pending owner sign-off):**
+  - Concept **A "Liberty Reads"** as the header mark (`static/img/brand/mark.svg`): crowned Liberty, torch raised, open book held in front. It's teal `#2F8F83`, with a torch-gold flame and cream pages.
+  - Concept **B "Crowned Book"**, her crown resting on an open book, as the small-size cut (`favicon.svg`, `favicon-32.png`, `apple-touch-icon.png`). A turns to mush at 16px.
+- **Still to do once the owner picks:** final refinement and optical corrections, a lockup with the wordmark in outlines, mono and reversed versions, and the full icon set (`logo-design` skill, phase 7).
 
 ## Local development
 
@@ -150,6 +172,7 @@ make test-extractor  # the extractor's golden tests against the real PDF
 make idioms       # 10 random idioms from the local DB (N=20 MIN=70 make idioms)
 make db-shell     # sqlite3 on ./data/kya.db
 make puzzle       # print today's stored questions with answers (DAY=2026-07-04 make puzzle)
+make backgrounds  # re-download background photos + regenerate backgrounds.json
 make db-reset     # delete ./data/kya.db; next start re-migrates, reseeds, backfills
 make native       # ./mvnw -Pnative native:compile → target/knowyouramerican
 make run-native   # run the native binary against ./data/kya.db
@@ -186,10 +209,10 @@ Requires JDK 25 (GraalVM for `make native`). The Tailwind CLI downloads itself i
 1. ✅ Skeleton: pom, Makefile, Tailwind, Flyway, empty pages, `make dev` and `make test` green.
 2. ✅ Extractor plus golden tests, `idioms.jsonl`, and the seed migration.
 3. ✅ Generator, scheduler, and their tests (invariants over 400 simulated days).
-4. Play page: HTMX answer flow, localStorage, progress circles, summary and share card.
-5. Archive: calendar, year/month picker, random day.
-6. Logo (3 greyscale concepts, owner picks one, then the kit and favicon), backgrounds, and visual polish using the brand palette.
-7. Native build and smoke test.
+4. ✅ Play page: HTMX answer flow, localStorage, progress circles, summary and share card.
+5. ✅ Archive: calendar, year/month picker, random day.
+6. ✅ Backgrounds (18) and polish. 🟡 Logo: concepts done, with A and B in use; waiting for the owner's pick, then the final kit.
+7. ✅ Native build, plus a browser-driven smoke test of the full flow against the binary.
 8. ✅ Deploy workflow (see **Deployment**).
 
 ## Deployment

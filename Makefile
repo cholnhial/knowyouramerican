@@ -4,7 +4,7 @@ MVN   := ./mvnw
 DB    ?= ./data/kya.db
 
 .DEFAULT_GOAL := help
-.PHONY: help dev run css css-watch test test-extractor extract idioms puzzle native run-native db-reset db-shell clean
+.PHONY: help dev run css css-watch test test-extractor extract idioms puzzle backgrounds native run-native db-reset db-shell clean
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-12s\033[0m %s\n",$$1,$$2}'
@@ -43,6 +43,9 @@ puzzle: ## Print a day's questions from the local DB (DAY=2026-07-04, default: t
 	  (SELECT group_concat(CASE WHEN o.key = q.correct_index THEN '     ✓ ' ELSE '       ' END || o.value, char(10)) \
 	   FROM json_each(q.options_json) o) \
 	  FROM question q WHERE q.day_date = '$$day' ORDER BY q.position;"
+
+backgrounds: ## Re-download background photos + regenerate backgrounds.json (needs convert + cwebp)
+	python3 scripts/fetch-backgrounds.py
 
 native: ## Compile the GraalVM native binary → target/knowyouramerican (needs GraalVM ≥ 25.0.2)
 	$(MVN) -Pnative clean native:compile -DskipTests

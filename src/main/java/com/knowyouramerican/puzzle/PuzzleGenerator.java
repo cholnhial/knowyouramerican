@@ -239,7 +239,7 @@ public final class PuzzleGenerator {
     }
 
     /** Definitions as shown on a button: no trailing period, long ones cut at the first ";". */
-    static String displayDefinition(String definition) {
+    public static String displayDefinition(String definition) {
         String d = definition.strip();
         if (d.length() > 90 && d.contains(";")) d = d.substring(0, d.indexOf(';'));
         d = d.replaceAll("[.;,:]+$", "").strip();

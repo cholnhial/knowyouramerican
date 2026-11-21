@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- Month calendar, swapped in place when the month changes -->
+<div th:fragment="calendar" id="calendar" class="rounded-2xl bg-white/85 p-4 shadow-sm ring-1 ring-mist sm:p-5">
+  <form class="flex items-center justify-between gap-2"
+        hx-get="/archive" hx-target="#calendar" hx-swap="outerHTML" hx-push-url="true"
+        hx-trigger="change">
+    <a th:if="${m.previous() != null}"
+       th:href="@{/archive(year=${m.previous().getYear()},month=${m.previous().getMonthValue()})}"
+       th:attr="hx-get=@{/archive(year=${m.previous().getYear()},month=${m.previous().getMonthValue()})}"
+       hx-target="#calendar" hx-swap="outerHTML" hx-push-url="true"
+       class="grid size-9 place-items-center rounded-full text-lg text-slate transition hover:bg-mist hover:text-ink"
+       aria-label="Previous month">‹</a>
+    <span th:if="${m.previous() == null}" class="size-9"></span>
+
+    <div class="flex gap-2">
+      <label class="sr-only" for="month">Month</label>
+      <select id="month" name="month"
+              class="rounded-lg border-2 border-mist bg-white px-2 py-1.5 text-sm font-semibold text-ink focus:border-liberty focus:outline-none">
+        <option th:each="o : ${m.months()}" th:value="${o.value()}" th:text="${o.label()}"
+                th:selected="${o.value() == m.monthValue()}" th:disabled="${!o.enabled()}">November</option>
+      </select>
+      <label class="sr-only" for="year">Year</label>
+      <select id="year" name="year"
+              class="rounded-lg border-2 border-mist bg-white px-2 py-1.5 text-sm font-semibold text-ink focus:border-liberty focus:outline-none">
+        <option th:each="y : ${m.years()}" th:value="${y}" th:text="${y}" th:selected="${y == m.year()}">2026</option>
+      </select>
+    </div>
+
+    <a th:if="${m.next() != null}"
+       th:href="@{/archive(year=${m.next().getYear()},month=${m.next().getMonthValue()})}"
+       th:attr="hx-get=@{/archive(year=${m.next().getYear()},month=${m.next().getMonthValue()})}"
+       hx-target="#calendar" hx-swap="outerHTML" hx-push-url="true"
+       class="grid size-9 place-items-center rounded-full text-lg text-slate transition hover:bg-mist hover:text-ink"
+       aria-label="Next month">›</a>
+    <span th:if="${m.next() == null}" class="size-9"></span>
+  </form>
+
+  <div class="mt-4 grid grid-cols-7 gap-1.5 text-center text-[11px] font-semibold tracking-wide text-slate uppercase">
+    <span th:each="w : ${m.weekdays()}" th:text="${w}">Sun</span>
+  </div>
+  <div class="mt-1.5 grid gap-1.5">
+    <div th:each="week : ${m.weeks()}" class="grid grid-cols-7 gap-1.5">
+      <th:block th:each="d : ${week}">
+        <span th:if="${d.date() == null}" class="aspect-square"></span>
+        <span th:if="${d.date() != null and !d.playable()}"
+              class="grid aspect-square place-items-center rounded-lg text-sm text-slate/40"
+              th:text="${d.dayOfMonth()}">1</span>
+        <a th:if="${d.playable()}" th:href="@{/play/{d}(d=${d.date()})}"
+           th:attr="data-kya-day=${d.date()}"
+           th:classappend="${d.today()} ? 'border-ink/70' : 'border-transparent'"
+           class="flex aspect-square flex-col items-center justify-center rounded-lg border-2 bg-white/70 text-sm font-semibold text-ink transition hover:-translate-y-0.5 hover:shadow-md">
+          <span th:text="${d.dayOfMonth()}">1</span>
+          <span data-kya-badge class="text-[10px] leading-none font-bold opacity-90"></span>
+        </a>
+      </th:block>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

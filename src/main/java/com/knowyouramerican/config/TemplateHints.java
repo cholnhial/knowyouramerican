@@ -1,8 +1,11 @@
 package com.knowyouramerican.config;
 
 import com.knowyouramerican.background.Background;
-import com.knowyouramerican.web.GameController;
+import com.knowyouramerican.web.CardView;
+import com.knowyouramerican.web.GameView;
+import com.knowyouramerican.web.MonthView;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import org.springframework.aot.hint.MemberCategory;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
@@ -24,9 +27,15 @@ public class TemplateHints {
     static final Class<?>[] TEMPLATE_TYPES = {
             // view models
             Background.class,
-            GameController.DemoQuestion.class,
+            GameView.class,
+            CardView.class,
+            CardView.Reveal.class,
+            MonthView.class,
+            MonthView.Day.class,
+            MonthView.Option.class,
             // JDK types used in expressions
             LocalDate.class,
+            YearMonth.class,
             String.class,
             // Thymeleaf helpers used in expressions (#lists, iteration status)
             org.thymeleaf.expression.Lists.class,
