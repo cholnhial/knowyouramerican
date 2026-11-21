@@ -1,0 +1,143 @@
+name: Deploy to Linode
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+# Never run two deploys at once; a newer push waits for the current one.
+concurrency:
+  group: deploy-linode
+  cancel-in-progress: false
+
+env:
+  APP_NAME: knowyouramerican
+  DEPLOY_PATH: /opt/knowyouramerican
+  DOMAIN: kya.chol.dev
+  APP_PORT: '8090'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # GraalVM Community from GitHub releases: Oracle's "latest 25" download currently 404s,
+      # and native:compile needs the latest 25.x for the current reachability-metadata schema.
+      - name: Set up GraalVM
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '25'
+          distribution: 'graalvm-community'
+          cache: 'maven'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # JVM tests first (fast); the extractor module is not built here — it needs the
+      # local-only PDF and the app only uses the committed idioms.jsonl.
+      - name: Test
+        run: ./mvnw -B verify
+
+      # Spring Boot 4's `native` profile doesn't bind native-image to `package`; call the goal.
+      - name: Build native binary
+        run: ./mvnw -B -Pnative clean native:compile -DskipTests
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APP_NAME }}-native
+          path: |
+            target/${{ env.APP_NAME }}
+            deploy/
+          retention-days: 1
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: Deployment
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.APP_NAME }}-native
+
+      # Upload to a staging folder; the running binary is swapped in atomically below
+      # (copying over a running executable fails with "Text file busy").
+      - name: Copy release to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: target/${{ env.APP_NAME }},deploy
+          target: ${{ env.DEPLOY_PATH }}/release
+          rm: true
+
+      - name: Install, configure nginx + TLS, restart
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          APP_NAME: ${{ env.APP_NAME }}
+          DEPLOY_PATH: ${{ env.DEPLOY_PATH }}
+          DOMAIN: ${{ env.DOMAIN }}
+          APP_PORT: ${{ env.APP_PORT }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: APP_NAME,DEPLOY_PATH,DOMAIN,APP_PORT
+          script: |
+            set -euo pipefail
+            RELEASE="$DEPLOY_PATH/release"
+
+            # --- App user and folders (SQLite lives in data/, kept across deploys) ---
+            id -u kya >/dev/null 2>&1 || useradd --system --home-dir "$DEPLOY_PATH" --shell /usr/sbin/nologin kya
+            mkdir -p "$DEPLOY_PATH/data"
+            chown -R kya:kya "$DEPLOY_PATH/data"
+
+            # --- Swap in the new binary atomically ---
+            install -m 755 "$RELEASE/target/$APP_NAME" "$DEPLOY_PATH/$APP_NAME.new"
+            mv -f "$DEPLOY_PATH/$APP_NAME.new" "$DEPLOY_PATH/$APP_NAME"
+
+            # --- Runtime config: localhost only, nginx is the public face ---
+            cat > "$DEPLOY_PATH/.env" << EOF
+            PORT=$APP_PORT
+            SERVER_ADDRESS=127.0.0.1
+            SERVER_FORWARD_HEADERS_STRATEGY=native
+            KYA_DB_PATH=$DEPLOY_PATH/data/kya.db
+            EOF
+            chmod 600 "$DEPLOY_PATH/.env"
+
+            # --- systemd ---
+            install -m 644 "$RELEASE/deploy/$APP_NAME.service" "/etc/systemd/system/$APP_NAME.service"
+            systemctl daemon-reload
+            systemctl enable "$APP_NAME"
+            systemctl restart "$APP_NAME"
+
+            # Wait for the app to answer (startup also backfills any missing puzzle days)
+            for i in $(seq 1 30); do
+              if curl -fsS -o /dev/null "http://127.0.0.1:$APP_PORT/"; then echo "App is up"; break; fi
+              if [ "$i" -eq 30 ]; then
+                echo "App did not come up"; journalctl -u "$APP_NAME" -n 50 --no-pager; exit 1
+              fi
+              sleep 2
+            done
+
+            # --- nginx: add our server block to sites-available/default only if missing ---
+            SITE=/etc/nginx/sites-available/default
+            if ! grep -q "server_name $DOMAIN;" "$SITE"; then
+              cp "$SITE" "$SITE.bak.$(date +%Y%m%d%H%M%S)"
+              { echo; sed "s/__PORT__/$APP_PORT/g" "$RELEASE/deploy/nginx/$DOMAIN.conf"; } >> "$SITE"
+              echo "Added $DOMAIN to $SITE"
+            fi
+            nginx -t
+            systemctl reload nginx
+
+            # --- TLS: certbot adds the 443 block + http→https redirect on first deploy ---
+            if [ ! -d "/etc/letsencrypt/live/$DOMAIN" ]; then
+              certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos --redirect
+              nginx -t
+              systemctl reload nginx
+            fi
+
+            systemctl is-active "$APP_NAME"
+            curl -fsS -o /dev/null -w "https://$DOMAIN → %{http_code}\n" "https://$DOMAIN/" || true

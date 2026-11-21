@@ -44,8 +44,8 @@ puzzle: ## Print a day's questions from the local DB (DAY=2026-07-04, default: t
 	   FROM json_each(q.options_json) o) \
 	  FROM question q WHERE q.day_date = '$$day' ORDER BY q.position;"
 
-native: ## Compile the GraalVM native binary → target/knowyouramerican
-	$(MVN) -Pnative native:compile -DskipTests
+native: ## Compile the GraalVM native binary → target/knowyouramerican (needs GraalVM ≥ 25.0.2)
+	$(MVN) -Pnative clean native:compile -DskipTests
 
 run-native: ## Run the native binary against $(DB)
 	KYA_DB_PATH=$(DB) ./target/knowyouramerican

@@ -1,0 +1,25 @@
+[Unit]
+Description=Know Your American (daily idioms game)
+After=network.target
+
+[Service]
+Type=simple
+User=kya
+Group=kya
+WorkingDirectory=/opt/knowyouramerican
+EnvironmentFile=/opt/knowyouramerican/.env
+ExecStart=/opt/knowyouramerican/knowyouramerican
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+# Hardening: the app only writes its SQLite DB (and sqlite-jdbc's native lib to /tmp).
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/knowyouramerican/data
+
+[Install]
+WantedBy=multi-user.target
