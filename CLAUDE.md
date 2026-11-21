@@ -91,7 +91,7 @@ Package root `com.knowyouramerican`:
 - `puzzle_day(day_date PK, created_at)`
 - `question(id, day_date, position 1..5, idiom_id, type MEANING|FINISH|FITS, prompt, options_json, correct_index)`
 
-**Seed pipeline.** The PDF is never read at runtime.
+**Seed pipeline.** The PDF is never read at runtime. `docs/idioms.pdf` is **gitignored** (copyrighted ebook): a fresh clone needs a local copy only for `make extract` / `make test-extractor`. The app builds and runs from the committed `idioms.jsonl`.
 1. `tools/idiom-extractor/` is a standalone Maven module (PDFBox 3) that the app does not depend on. It reads PDF pages 16–460; the Phrase-Finder Index starts on 462. Layout facts it relies on:
    - **Entry boundaries:** an entry head starts at x = 36/54/213/231 (column and page parity); continuation lines sit 9pt further in. Articles ("a labor of love") sit about 3pt in.
    - **Font meanings:**
