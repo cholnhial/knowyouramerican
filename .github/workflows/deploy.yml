@@ -42,6 +42,19 @@ jobs:
       - name: Build native binary
         run: ./mvnw -B -Pnative clean native:compile -DskipTests
 
+      # Native-only failures (missing reflection/resource hints) don't show up in JVM tests:
+      # boot the binary and hit the pages before anything is deployed.
+      - name: Smoke-test native binary
+        run: |
+          KYA_DB_PATH=/tmp/kya/kya.db PORT=8099 ./target/${{ env.APP_NAME }} > /tmp/kya.log 2>&1 &
+          for i in $(seq 1 30); do curl -fsS -o /dev/null http://127.0.0.1:8099/ && break; sleep 1; done
+          curl -fsS -o /dev/null http://127.0.0.1:8099/
+          curl -fsS -o /dev/null http://127.0.0.1:8099/play/2026-01-01
+          curl -fsS -o /dev/null -H "HX-Request: true" http://127.0.0.1:8099/play/2026-01-01
+          curl -fsS -o /dev/null http://127.0.0.1:8099/css/app.css
+          if grep -E "MissingReflection|EL1008E|APPLICATION FAILED" /tmp/kya.log; then cat /tmp/kya.log; exit 1; fi
+          echo "Native binary OK"
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:

@@ -167,7 +167,11 @@ Requires JDK 25 (GraalVM for `make native`). The Tailwind CLI downloads itself i
 ## Conventions
 
 - **No SPA, no npm, no frontend framework.** Any interactivity is an HTMX attribute plus a server fragment. Keep `game.js` small.
-- **Stay native-safe.** Avoid reflection-heavy libraries. When adding anything that uses reflection, resources, or proxies, register `RuntimeHints` and check it with `make native`. Templates and `static/**` are bundled by Spring AOT.
+- **Stay native-safe.** Avoid reflection-heavy libraries. Templates and `static/**` are bundled by Spring AOT; anything else needs hints:
+  - **Classpath files** read at runtime (e.g. `backgrounds.json`, `db/seed/idioms.jsonl`) need a `RuntimeHintsRegistrar` resource pattern.
+  - **Every type a Thymeleaf template touches** (view-model records, `LocalDate`, `String` methods) must be listed in `config/TemplateHints`. A missing one only fails in the native binary, with HTTP 500 and `EL1008E` / `MissingReflectionRegistrationError`; JVM tests won't catch it.
+  - Verify with `make native` plus a quick run. CI also smoke-tests the binary before deploying.
+  - `native:compile` needs **GraalVM ≥ 25.0.2**, because 25.0.1 rejects the current reachability-metadata schema. Spring Boot 4's `native` profile doesn't bind native-image to `package`; always call `native:compile`.
 - Use Java records for DTOs and view models, and constructor injection.
 - SQL lives in repositories (`JdbcClient`). Schema changes go in new Flyway migrations. **Never edit an applied migration.**
 - Tests: JUnit 5, a temp-file SQLite per test class, and MockMvc for the web layer. Every generator change must keep these invariants tested:
@@ -186,4 +190,25 @@ Requires JDK 25 (GraalVM for `make native`). The Tailwind CLI downloads itself i
 5. Archive: calendar, year/month picker, random day.
 6. Logo (3 greyscale concepts, owner picks one, then the kit and favicon), backgrounds, and visual polish using the brand palette.
 7. Native build and smoke test.
-8. *Later:* a GitHub Action to build the native binary and deploy it to the server (systemd service, persistent `KYA_DB_PATH`).
+8. ✅ Deploy workflow (see **Deployment**).
+
+## Deployment
+
+`.github/workflows/deploy.yml` runs on every push to `main` (and manually). Live site: https://kya.chol.dev.
+- **build:**
+  - Sets up GraalVM Community 25 (Oracle's "latest 25" download 404s).
+  - Runs `./mvnw verify` and `native:compile`.
+  - Boots the binary and requests `/`, `/play/…`, and the CSS (native smoke test).
+  - Uploads the binary plus `deploy/`.
+- **deploy** (GitHub environment **`Deployment`**; secrets `SSH_HOST`, `SSH_USER`, `SSH_PRIVATE_KEY`):
+  1. Copies the release to `/opt/knowyouramerican/release/` and swaps the binary in atomically.
+  2. Writes `.env` (`PORT=8090`, `SERVER_ADDRESS=127.0.0.1`, `KYA_DB_PATH=/opt/knowyouramerican/data/kya.db`).
+  3. Installs `deploy/knowyouramerican.service`, which runs as the system user `kya` with a hardened unit.
+  4. Restarts the service and waits for the app to answer.
+- **nginx:** the `deploy/nginx/kya.chol.dev.conf` block is appended to `/etc/nginx/sites-available/default` **only if** no `server_name kya.chol.dev;` exists. A backup is kept as `default.bak.<timestamp>`. Later edits to the repo file are **not** re-applied; edit the server by hand.
+- **TLS:** `certbot --nginx -d kya.chol.dev --redirect` runs only when `/etc/letsencrypt/live/kya.chol.dev` is missing. It uses the server's existing certbot account.
+- **Data:** the SQLite DB in `/opt/knowyouramerican/data/` survives deploys. Startup backfills any missing puzzle days.
+- **Ops:**
+  - `journalctl -u knowyouramerican -f`
+  - `systemctl status knowyouramerican`
+  - `sqlite3 /opt/knowyouramerican/data/kya.db`
